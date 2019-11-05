@@ -1,8 +1,8 @@
 package lua_debugger
 
 import (
+	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 	lua "github.com/yuin/gopher-lua"
-	"lua_debugger/proto"
 )
 
 const (

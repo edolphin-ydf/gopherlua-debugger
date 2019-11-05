@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 	"io"
 	"log"
-	"lua_debugger/proto"
 	"net"
 	"strconv"
 )

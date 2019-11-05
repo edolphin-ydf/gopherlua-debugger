@@ -34,25 +34,6 @@ const (
 	MsgIdLogNotify
 )
 
-type ValueType int
-
-const (
-	VBool ValueType = iota
-	VString
-	VTable
-	VFunction
-	VThread
-	VUserdata
-)
-
-type VariableNameType int
-
-const (
-	NString VariableNameType = iota
-	NNumber
-	NComplex
-)
-
 type Variable struct {
 	Name          string      `json:"name"`
 	NameType      int         `json:"nameType"`

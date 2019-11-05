@@ -1,9 +1,9 @@
 package lua_debugger
 
 import (
+	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 	lua "github.com/yuin/gopher-lua"
 	"log"
-	"lua_debugger/proto"
 )
 
 type HookStateInter interface {
@@ -137,7 +137,7 @@ func (h *HookStateStepOver) Start(debugger *Debugger, current *lua.LState) bool 
 		return false
 	}
 	_, err := current.GetInfo("nSl", ar, nil)
-	if	err != nil {
+	if err != nil {
 		log.Println("HookStateStepOver:Start, get info fail:", err)
 	}
 
@@ -193,7 +193,3 @@ func (h *HookStateStop) Start(debugger *Debugger, current *lua.LState) bool {
 	debugger.DoAction(proto.Continue)
 	return true
 }
-
-
-
-

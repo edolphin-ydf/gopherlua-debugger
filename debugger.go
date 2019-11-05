@@ -2,9 +2,9 @@ package lua_debugger
 
 import (
 	"container/list"
+	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 	lua "github.com/yuin/gopher-lua"
 	"log"
-	"lua_debugger/proto"
 	"os"
 	"strings"
 	"sync"
@@ -254,9 +254,9 @@ func (d *Debugger) GetStacks(L *lua.LState) []*Stack {
 			stack.LocalVariables = append(stack.LocalVariables, variable)
 		}
 
-		if f, _ := L.GetInfo("f", ar, nil); f != lua.LNil{
-			for i:=1; ; i++ {
-				name, value := L.GetUpvalue(f.(*lua.LFunction),i)
+		if f, _ := L.GetInfo("f", ar, nil); f != lua.LNil {
+			for i := 1; ; i++ {
+				name, value := L.GetUpvalue(f.(*lua.LFunction), i)
 				if name == "" {
 					break
 				}
@@ -396,7 +396,7 @@ func (d *Debugger) CreateEnv(stackLevel int) (*lua.LTable, bool) {
 	locals := L.NewTable()
 	upvalues := L.NewTable()
 
-	for i:=1; ; i++ {
+	for i := 1; ; i++ {
 		name, value := L.GetLocal(ar, i)
 		if name == "" {
 			break
@@ -407,8 +407,8 @@ func (d *Debugger) CreateEnv(stackLevel int) (*lua.LTable, bool) {
 		locals.RawSetString(name, value)
 	}
 
-	if f, _ := L.GetInfo( "f", ar, nil); f != nil {
-		for i:=1; ; i++ {
+	if f, _ := L.GetInfo("f", ar, nil); f != nil {
+		for i := 1; ; i++ {
 			name, value := L.GetUpvalue(f.(*lua.LFunction), i)
 			if name == "" {
 				break
