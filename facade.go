@@ -68,6 +68,8 @@ func (f *Facade) HandleMsg(cmd int, req interface{}) {
 		f.OnReadyReq()
 	case proto.MsgIdAddBreakPointReq:
 		f.OnAddBreakPointReq(req.(*proto.AddBreakPointReq))
+	case proto.MsgIdRemoveBreakPointReq:
+		f.OnRemoveBreakPointReq(req.(*proto.RemoveBreakPointReq))
 	case proto.MsgIdActionReq:
 		f.OnActionReq(req.(*proto.ActionReq))
 	case proto.MsgIdEvalReq:
@@ -103,6 +105,12 @@ func (f *Facade) OnAddBreakPointReq(req *proto.AddBreakPointReq) {
 			Line:      bpProto.Line,
 		}
 		Dbg.AddBreakPoint(bp)
+	}
+}
+
+func (f *Facade) OnRemoveBreakPointReq(req *proto.RemoveBreakPointReq) {
+	for _, bp := range req.BreakPoints {
+		Dbg.RemoveBreakPoint(bp.File, bp.Line)
 	}
 }
 
