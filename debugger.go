@@ -5,7 +5,6 @@ import (
 	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 	lua "github.com/yuin/gopher-lua"
 	"log"
-	"os"
 	"strings"
 	"sync"
 )
@@ -459,7 +458,7 @@ func (d *Debugger) GetFile(L *lua.LState, ar *Ar) string {
 func ParsePathParts(file string, paths []string) []string {
 	idx := 0
 	for i, c := range file {
-		if c == os.PathSeparator {
+		if c == '/' || c == '\\' {
 			part := file[idx:i]
 			idx = i + 1
 
