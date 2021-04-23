@@ -36,11 +36,13 @@ func newFacade() *Facade {
 
 	return res
 }
-
 func (f *Facade) TcpConnect(L *lua.LState, host string, port int) error {
 	f.states[L] = struct{}{}
 	f.t = &Transport{}
 	f.t.Handler = f.HandleMsg
+	defer func() {
+		f.isIDEReady = false
+	}()
 	if err := f.t.Connect(host, port); err != nil {
 		LuaError(L, err.Error())
 		return err
