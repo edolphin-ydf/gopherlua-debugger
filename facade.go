@@ -1,9 +1,12 @@
 package lua_debugger
 
 import (
+	"context"
+	"fmt"
 	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 	lua "github.com/yuin/gopher-lua"
 	"sync"
+	"time"
 )
 
 func LuaError(L *lua.LState, msg string) int {
@@ -45,12 +48,34 @@ func (f *Facade) TcpConnect(L *lua.LState, host string, port int) error {
 		LuaError(L, err.Error())
 		return err
 	}
-
-	f.WaiteIDE(true)
+	waitDone := make(chan struct{}, 1)
+	go f.stopWaitIDEIfContextCanceled(L.Context(), waitDone)
+	f.WaiteIDE(waitDone, true)
 	return nil
 }
 
-func (f *Facade) WaiteIDE(force bool) {
+func (f *Facade) stopWaitIDEIfContextCanceled(ctx context.Context, waitDone <-chan struct{}) {
+	select {
+	case <-ctx.Done():
+		{
+			ticker := time.NewTicker(100 * time.Millisecond)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					{
+						f.cond.Broadcast()
+					}
+				case <-waitDone:
+					return
+				}
+
+			}
+		}
+	}
+}
+
+func (f *Facade) WaiteIDE(done chan<- struct{}, force bool) {
 	if f.t != nil && force && !f.isWaitingForIDE && !f.isIDEReady {
 		f.isWaitingForIDE = true
 		f.m.Lock()
@@ -58,6 +83,7 @@ func (f *Facade) WaiteIDE(force bool) {
 		f.m.Unlock()
 		f.isWaitingForIDE = false
 	}
+	done <- struct{}{}
 }
 
 func (f *Facade) HandleMsg(cmd int, req interface{}) {
