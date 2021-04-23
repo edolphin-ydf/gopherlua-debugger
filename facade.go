@@ -2,7 +2,6 @@ package lua_debugger
 
 import (
 	"context"
-	"fmt"
 	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 	lua "github.com/yuin/gopher-lua"
 	"sync"
