@@ -18,6 +18,7 @@ func LuaError(L *lua.LState, msg string) int {
 }
 
 type Facade struct {
+	dbg             *Debugger
 	t               *Transport
 	m               sync.Mutex
 	cond            *sync.Cond
@@ -28,13 +29,13 @@ type Facade struct {
 	states map[*lua.LState]struct{}
 }
 
-var Fcd = newFacade()
-
 func newFacade() *Facade {
 	res := &Facade{
+		dbg:    newDebugger(),
 		states: make(map[*lua.LState]struct{}),
 	}
 	res.cond = sync.NewCond(&res.m)
+	res.dbg.fcd = res
 
 	return res
 }
@@ -104,13 +105,13 @@ func (f *Facade) HandleMsg(cmd int, req interface{}) {
 
 func (f *Facade) OnInitReq(req *proto.InitReq) {
 	f.helperCode = req.EmmyHelper
-	Dbg.Start(f.helperCode)
+	f.dbg.Start(f.helperCode)
 
 	for state := range f.states {
-		Dbg.Attach(state)
+		f.dbg.Attach(state)
 	}
 
-	Dbg.ExtNames = req.Ext
+	f.dbg.ExtNames = req.Ext
 }
 
 func (f *Facade) OnReadyReq() {
@@ -120,7 +121,7 @@ func (f *Facade) OnReadyReq() {
 
 func (f *Facade) OnAddBreakPointReq(req *proto.AddBreakPointReq) {
 	if req.Clear {
-		Dbg.RemoveAllBreakpoints()
+		f.dbg.RemoveAllBreakpoints()
 	}
 
 	for _, bpProto := range req.BreakPoints {
@@ -129,18 +130,18 @@ func (f *Facade) OnAddBreakPointReq(req *proto.AddBreakPointReq) {
 			Condition: bpProto.Condition,
 			Line:      bpProto.Line,
 		}
-		Dbg.AddBreakPoint(bp)
+		f.dbg.AddBreakPoint(bp)
 	}
 }
 
 func (f *Facade) OnRemoveBreakPointReq(req *proto.RemoveBreakPointReq) {
 	for _, bp := range req.BreakPoints {
-		Dbg.RemoveBreakPoint(bp.File, bp.Line)
+		f.dbg.RemoveBreakPoint(bp.File, bp.Line)
 	}
 }
 
 func (f *Facade) OnActionReq(req *proto.ActionReq) {
-	Dbg.DoAction(req.Action)
+	f.dbg.DoAction(req.Action)
 }
 
 func (f *Facade) OnEvalReq(req *proto.EvalReq) {
@@ -153,11 +154,11 @@ func (f *Facade) OnEvalReq(req *proto.EvalReq) {
 		Success:    false,
 	}
 
-	Dbg.Eval(context)
+	f.dbg.Eval(context)
 }
 
 func (f *Facade) OnBreak(L *lua.LState) {
-	stacks := Dbg.GetStacks(L)
+	stacks := f.dbg.GetStacks(L)
 
 	notify := proto.BreakNotify{Cmd: proto.MsgIdBreakNotify}
 	for _, stack := range stacks {

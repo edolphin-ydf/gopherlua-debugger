@@ -26,7 +26,11 @@ func Hook(L *lua.LState) int {
 		ar.Event = Lua_HookRet
 	}
 
-	Dbg.Hook(L, ar)
+	if fcdUd, ok := L.GetField(L.Get(lua.RegistryIndex), KeyDebuggerFcd).(*lua.LUserData); ok {
+		if fcd, ok := fcdUd.Value.(*Facade); ok {
+			fcd.dbg.Hook(L, ar)
+		}
+	}
 	return 0
 }
 
@@ -54,9 +58,9 @@ type Debugger struct {
 	mutexEval sync.Mutex
 	evalQueue list.List
 	running   bool
-}
 
-var Dbg = newDebugger()
+	fcd *Facade
+}
 
 func newDebugger() *Debugger {
 	res := &Debugger{}
@@ -272,7 +276,7 @@ func (d *Debugger) GetStacks(L *lua.LState) []*Stack {
 func (d *Debugger) HandleBreak(L *lua.LState) {
 	d.CurrentState = L
 	d.UpdateHook(L, "l") // TODO
-	Fcd.OnBreak(L)
+	d.fcd.OnBreak(L)
 	d.EnterDebugMode(L)
 }
 
@@ -300,7 +304,7 @@ func (d *Debugger) EnterDebugMode(L *lua.LState) {
 			evalContext, _ := evalContextNode.Value.(*EvalContext)
 			evalContext.Success = d.DoEval(evalContext)
 			d.SkipHook = skip
-			Fcd.OnEvalResult(evalContext)
+			d.fcd.OnEvalResult(evalContext)
 			continue
 		}
 		d.mutexEval.Unlock()

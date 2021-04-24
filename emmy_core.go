@@ -9,10 +9,20 @@ func init() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
+const (
+	KeyDebuggerFcd = "__Debugger_Fcd"
+)
+
 func TcpConnect(L *lua.LState) int {
 	host := L.CheckString(1)
 	port := L.CheckNumber(2)
-	if err := Fcd.TcpConnect(L, host, int(port)); err != nil {
+
+	fcd := newFacade()
+	fcdUd := L.NewUserData()
+	fcdUd.Value = fcd
+	L.SetField(L.Get(lua.RegistryIndex), KeyDebuggerFcd, fcdUd)
+
+	if err := fcd.TcpConnect(L, host, int(port)); err != nil {
 		L.Push(lua.LFalse)
 		L.Push(lua.LString(err.Error()))
 		return 2
@@ -21,7 +31,7 @@ func TcpConnect(L *lua.LState) int {
 	return 1
 }
 
-var coreApi = map[string]lua.LGFunction {
+var coreApi = map[string]lua.LGFunction{
 	"tcpConnect": TcpConnect,
 }
 
