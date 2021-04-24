@@ -49,7 +49,9 @@ func (f *Facade) TcpConnect(L *lua.LState, host string, port int) error {
 		return err
 	}
 	waitDone := make(chan struct{}, 1)
-	go f.stopWaitIDEIfContextCanceled(L.Context(), waitDone)
+	if L.Context() != nil {
+		go f.stopWaitIDEIfContextCanceled(L.Context(), waitDone)
+	}
 	f.WaiteIDE(waitDone, true)
 	return nil
 }
